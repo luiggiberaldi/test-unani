@@ -1,0 +1,6 @@
+{
+  "name": "Test Avanzado de Biotipo",
+  "description": "Un análisis profundo de tus patrones físicos, energéticos, emocionales y sociales basado en los 4 biotipos clásicos.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
