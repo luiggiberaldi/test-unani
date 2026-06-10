@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
 import { Question, Answer } from '../types';
-import { QUESTIONS } from '../data/questions';
+import { QUESTIONS, getFilteredQuestions } from '../data/questions';
 import { MODULES } from '../data/biotypes';
 import { ProgressBar } from './ProgressBar';
 import { cn } from '../lib/utils';
@@ -16,18 +16,34 @@ interface QuestionWizardProps {
 }
 
 export function QuestionWizard({ initialAnswers, isDeepMode, onComplete, onSave }: QuestionWizardProps) {
-  const [answers, setAnswers] = useState<Answer[]>(initialAnswers);
-  const [currentIndex, setCurrentIndex] = useState(
-    initialAnswers.length < QUESTIONS.length ? initialAnswers.length : 0
-  );
+  const activeQuestions = useMemo(() => {
+    return getFilteredQuestions(isDeepMode);
+  }, [isDeepMode]);
+
+  const [answers, setAnswers] = useState<Answer[]>(() => {
+    // Filter initial answers to make sure we only keep those belonging to the active mode
+    return initialAnswers.filter(ans => 
+      activeQuestions.some(aq => aq.id === ans.questionId)
+    );
+  });
+
+  const [currentIndex, setCurrentIndex] = useState(() => {
+    const activeAnsweredCount = initialAnswers.filter(ans => 
+      activeQuestions.some(aq => aq.id === ans.questionId)
+    ).length;
+    return activeAnsweredCount < activeQuestions.length ? activeAnsweredCount : 0;
+  });
+
   const [direction, setDirection] = useState(1);
 
-  const question = QUESTIONS[currentIndex];
+  const safeIndex = Math.max(0, Math.min(currentIndex, activeQuestions.length - 1));
+  const question = activeQuestions[safeIndex] || activeQuestions[0] || QUESTIONS[0];
+  
   // Determine current module
-  const moduleIndex = MODULES.findIndex(m => m.id === question.moduleId);
-  const currentModule = MODULES[moduleIndex];
+  const moduleIndex = question ? MODULES.findIndex(m => m.id === question.moduleId) : 0;
+  const currentModule = MODULES[moduleIndex >= 0 ? moduleIndex : 0];
 
-  const currentAnswer = answers.find(a => a.questionId === question.id)?.selectedOptionIndices || [];
+  const currentAnswer = question ? (answers.find(a => a.questionId === question.id)?.selectedOptionIndices || []) : [];
 
   const handleOptionClick = (optIndex: number) => {
     let newIndices = [...currentAnswer];
@@ -73,7 +89,7 @@ export function QuestionWizard({ initialAnswers, isDeepMode, onComplete, onSave 
        return; // Require answer
     }
     
-    if (currentIndex < QUESTIONS.length - 1) {
+    if (currentIndex < activeQuestions.length - 1) {
       setDirection(1);
       setCurrentIndex(prev => prev + 1);
     } else {
@@ -89,24 +105,32 @@ export function QuestionWizard({ initialAnswers, isDeepMode, onComplete, onSave 
   };
 
   const microcopy = useMemo(() => {
-    if (currentIndex === 17) return "¡Módulo físico completado! Pasamos a la energía corporizada.";
-    if (currentIndex === 30) return "Vas muy bien. Estás descubriendo tu dinámica con el entorno.";
-    if (currentIndex === 44) return "Excelente. Entramos al mundo de tus emociones profundas.";
-    if (currentIndex === 60) return "Casi terminas. Última etapa: máscaras y adaptación social.";
+    if (isDeepMode) {
+      if (safeIndex === 17) return "¡Módulo físico completado! Pasamos a la energía corporizada.";
+      if (safeIndex === 30) return "Vas muy bien. Estás descubriendo tu dinámica con el entorno.";
+      if (safeIndex === 44) return "Excelente. Entramos al mundo de tus emociones profundas.";
+      if (safeIndex === 60) return "Casi terminas. Última etapa: máscaras y adaptación social.";
+    } else {
+      // Adjusted milestones for the 30-question version
+      if (safeIndex === 5) return "¡Módulo físico completado! Pasamos a la energía corporizada.";
+      if (safeIndex === 10) return "Vas muy bien. Estás descubriendo tu dinámica con el entorno.";
+      if (safeIndex === 15) return "Excelente. Entramos al mundo de tus emociones profundas.";
+      if (safeIndex === 25) return "Casi terminas. Última etapa: máscaras y adaptación social.";
+    }
     return null;
-  }, [currentIndex]);
+  }, [safeIndex, isDeepMode]);
 
   return (
     <div className="max-w-3xl mx-auto w-full pt-4 md:pt-12 px-4 flex flex-col min-h-[80vh]">
       <div className="mb-8">
-        <ProgressBar currentModule={currentIndex + 1} totalModules={QUESTIONS.length} />
+        <ProgressBar currentModule={safeIndex + 1} totalModules={activeQuestions.length} />
         
         <div className="mt-8 mb-2 flex items-center justify-between">
           <span className="text-amber-500 font-medium text-sm tracking-widest uppercase">
             Módulo {moduleIndex + 1} / {MODULES.length}
           </span>
           <span className="text-slate-500 text-sm">
-            {QUESTIONS.length - currentIndex} restantes
+            {activeQuestions.length - safeIndex} restantes
           </span>
         </div>
         <h2 className="text-2xl font-display font-bold text-white mb-1">{currentModule.name}</h2>
@@ -116,7 +140,7 @@ export function QuestionWizard({ initialAnswers, isDeepMode, onComplete, onSave 
       <div className="flex-1 relative">
         <AnimatePresence mode="popLayout" initial={false} custom={direction}>
           <motion.div
-            key={currentIndex}
+            key={safeIndex}
             custom={direction}
             initial={(d) => ({ opacity: 0, x: d * 50 })}
             animate={{ opacity: 1, x: 0 }}

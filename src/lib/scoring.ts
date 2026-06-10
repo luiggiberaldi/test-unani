@@ -1,7 +1,7 @@
 import { Answer, Biotype, TestResult } from '../types';
 import { QUESTIONS } from '../data/questions';
 
-const RGP_MASKS: Record<Biotype, Record<Biotype, { name: string, desc: string }>> = {
+const ADAPTATION_MASKS: Record<Biotype, Record<Biotype, { name: string, desc: string }>> = {
   colerico: {
     colerico: {
       name: "Fuego Puro / Esencia Directa",
@@ -160,7 +160,7 @@ export function calculateResults(answers: Answer[]): TestResult {
   const physicalBiotype = [...biotypes].sort((a,b) => (normalizedPhys[b] - normalizedPhys[a]) || (totalScores[b] - totalScores[a]))[0];
   const behavioralBiotype = [...biotypes].sort((a,b) => (normalizedBehav[b] - normalizedBehav[a]) || (totalScores[b] - totalScores[a]))[0];
 
-  const maskInfo = RGP_MASKS[physicalBiotype]?.[behavioralBiotype];
+  const maskInfo = ADAPTATION_MASKS[physicalBiotype]?.[behavioralBiotype];
   const maskName = maskInfo?.name || "Máscara de Adaptación";
   const maskDescription = maskInfo?.desc || "Muestras un proceso de adaptación complejo con múltiples influencias en tu comportamiento en comparación con tus rasgos físicos.";
   const isAligned = physicalBiotype === behavioralBiotype;
@@ -219,7 +219,7 @@ export function calculateResults(answers: Answer[]): TestResult {
     isMixed,
     mixedIndex: isMixed ? 2 : (diff < 25 ? 1 : 0),
     
-    // RGP V2.0 Extended Fields
+    // Extended Biotype Fields
     physicalBiotype,
     behavioralBiotype,
     consistencyScore,

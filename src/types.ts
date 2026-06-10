@@ -59,7 +59,7 @@ export interface TestResult {
   isMixed: boolean;
   mixedIndex: number;
   
-  // RGP V2.0 Extended Fields
+  // Extended Biotype Fields
   physicalBiotype: Biotype;
   behavioralBiotype: Biotype;
   consistencyScore: number;

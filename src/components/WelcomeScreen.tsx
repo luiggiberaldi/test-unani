@@ -1,5 +1,6 @@
 import { motion } from 'motion/react';
-import { ArrowRight, Activity } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
+import { Logo } from './Logo';
 
 interface WelcomeScreenProps {
   onNext: () => void;
@@ -11,45 +12,45 @@ interface WelcomeScreenProps {
 export function WelcomeScreen({ onNext, hasSavedProgress, onRestore }: WelcomeScreenProps) {
   return (
     <motion.div 
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      className="max-w-2xl mx-auto text-center space-y-8 pt-12 lg:pt-24 px-4"
+      exit={{ opacity: 0, y: -15 }}
+      className="max-w-xl mx-auto text-center space-y-8 pt-16 lg:pt-28 px-4"
     >
-      <div className="inline-flex items-center justify-center w-16 h-16 gold-gradient rounded-full mb-4 shadow-[0_0_20px_rgba(212,175,55,0.3)]">
-        <Activity className="w-8 h-8 text-black" />
+      <div className="inline-flex items-center justify-center mb-6 drop-shadow-[0_0_35px_rgba(212,175,55,0.25)]">
+        <Logo className="w-24 h-24" />
       </div>
       
-      <h1 className="text-4xl md:text-6xl font-light tracking-tight text-white">
-        Descubre tu <span className="gold-text font-bold">Biotipo</span>
-      </h1>
+      <div className="space-y-3">
+        <h1 className="text-4xl md:text-5xl font-light tracking-tight text-white uppercase font-display">
+          Descubre tu <span className="gold-text font-bold">Biotipo</span>
+        </h1>
+        <div className="h-[1px] w-12 bg-gradient-to-r from-transparent via-[#d4af37] to-transparent mx-auto" />
+      </div>
       
-      <p className="text-lg md:text-xl text-gray-400 max-w-xl mx-auto leading-relaxed">
-        Un análisis profundo de tus patrones físicos, energéticos, emocionales y sociales.
+      <p className="text-base md:text-lg text-gray-400 max-w-lg mx-auto leading-relaxed font-light">
+        Un análisis profundo de tus patrones físicos, energéticos, emocionales y de interrelación social basados en la integración de biocuántica, termodinámica biológica y temperamentos clásicos.
       </p>
 
-      <div className="pt-8 space-y-4 max-w-sm mx-auto">
-        <button onClick={onNext} className="btn-primary w-full text-lg">
+      <div className="pt-6 space-y-4 max-w-xs mx-auto">
+        <button onClick={onNext} className="btn-primary w-full text-base py-3.5 shadow-xl hover:shadow-[#d4af37]/10 transition-all duration-300">
           Comenzar Test 
-          <ArrowRight className="w-5 h-5 ml-2" />
+          <ArrowRight className="w-4 h-4 ml-2" />
         </button>
 
         {hasSavedProgress && (
-          <button onClick={onRestore} className="btn-secondary w-full text-sm">
+          <button onClick={onRestore} className="btn-secondary w-full text-xs py-2.5">
             Continuar sesión guardada
           </button>
         )}
       </div>
 
-      <div className="pt-12 text-sm text-gray-500 max-w-md mx-auto space-y-4">
-        <div className="flex items-center justify-center gap-4 text-[10px] font-bold tracking-widest uppercase">
+      <div className="pt-10 text-gray-500 max-w-sm mx-auto">
+        <div className="flex items-center justify-center gap-4 text-[9px] font-bold tracking-[0.2em] uppercase">
           <span>~12-15 Minutos</span>
-          <span className="w-1 h-1 rounded-full bg-gray-600" />
+          <span className="w-1 h-1 rounded-full bg-gray-700" />
           <span>80 Preguntas</span>
         </div>
-        <p className="opacity-70 text-[10px] tracking-widest uppercase mt-4 text-center">
-          Esta herramienta es interpretativa y educativa.<br/>No sustituye una evaluación profesional.
-        </p>
       </div>
     </motion.div>
   );

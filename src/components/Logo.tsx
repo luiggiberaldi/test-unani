@@ -1,0 +1,78 @@
+export function Logo({ className = "w-16 h-16" }: { className?: string }) {
+  return (
+    <svg 
+      className={className} 
+      viewBox="0 0 100 100" 
+      fill="none" 
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <defs>
+        <linearGradient id="gold-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#d4af37" />
+          <stop offset="30%" stopColor="#f1d592" />
+          <stop offset="70%" stopColor="#b8860b" />
+          <stop offset="100%" stopColor="#e5c158" />
+        </linearGradient>
+        <linearGradient id="gold-glow" x1="0%" y1="100%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#b8860b" stopOpacity="0.25" />
+          <stop offset="100%" stopColor="#f1d592" stopOpacity="0.05" />
+        </linearGradient>
+        <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="2.5" result="blur" />
+          <feComposite in="SourceGraphic" in2="blur" operator="over" />
+        </filter>
+      </defs>
+      
+      {/* Background Soft Glow Disc */}
+      <circle cx="50" cy="50" r="46" fill="url(#gold-glow)" />
+      
+      {/* Outer Sacred Geometry Ring - perfectly centered and static */}
+      <circle 
+        cx="50" 
+        cy="50" 
+        r="42" 
+        stroke="url(#gold-grad)" 
+        strokeWidth="1.5" 
+        strokeDasharray="1 5" 
+        strokeLinecap="round" 
+        className="opacity-60" 
+      />
+      
+      {/* Intersecting Balance Ring */}
+      <circle 
+        cx="50" 
+        cy="50" 
+        r="35" 
+        stroke="url(#gold-grad)" 
+        strokeWidth="1.8" 
+        filter="url(#glow)" 
+        className="opacity-90"
+      />
+      
+      {/* Four Elements Core Alignment (N, S, E, W tick marks inside dial) */}
+      <line x1="50" y1="18" x2="50" y2="23" stroke="url(#gold-grad)" strokeWidth="1.5" className="opacity-80" />
+      <line x1="50" y1="77" x2="50" y2="82" stroke="url(#gold-grad)" strokeWidth="1.5" className="opacity-80" />
+      <line x1="18" y1="50" x2="23" y2="50" stroke="url(#gold-grad)" strokeWidth="1.5" className="opacity-80" />
+      <line x1="77" y1="50" x2="82" y2="50" stroke="url(#gold-grad)" strokeWidth="1.5" className="opacity-80" />
+
+      {/* Biotype Diamond (Biological Structure) */}
+      <path 
+        d="M50 25 L75 50 L50 75 L25 50 Z" 
+        stroke="url(#gold-grad)" 
+        strokeWidth="1" 
+        className="opacity-70"
+      />
+
+      {/* Organic Life Pulse Line (Biological resonance / dynamic software) */}
+      <path 
+        d="M31 50 L41 50 L45 37 L49 63 L53 43 L57 50 L69 50" 
+        stroke="url(#gold-grad)" 
+        strokeWidth="2.2" 
+        strokeLinecap="round" 
+        strokeLinejoin="round" 
+        filter="url(#glow)"
+      />
+      
+    </svg>
+  );
+}

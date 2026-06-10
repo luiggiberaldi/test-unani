@@ -24,6 +24,7 @@ import {
 import { TestResult, Biotype } from '../types';
 import { BIOTYPES, MIXED_PROFILES } from '../data/biotypes';
 import { RadarChart } from './RadarChart';
+import { Logo } from './Logo';
 
 export function ResultsScreen({ result, onRestart }: { result: TestResult, onRestart: () => void, key?: string }) {
   const domProfile = BIOTYPES[result.dominant];
@@ -37,7 +38,7 @@ export function ResultsScreen({ result, onRestart }: { result: TestResult, onRes
 
   const handleShare = async () => {
     try {
-      const text = `Mi Biotipo Dominante es ${domProfile.name} ${domProfile.symbol}${secProfile ? ` con mezcla de ${secProfile.name}` : ''}. Coherencia Orgánica: ${result.consistencyScore}%. Descubre el tuyo en el Test de Biotipo RGP.`;
+      const text = `Mi Biotipo Dominante es ${domProfile.name} ${domProfile.symbol}${secProfile ? ` con mezcla de ${secProfile.name}` : ''}. Coherencia Orgánica: ${result.consistencyScore}%. Descubre el tuyo en la Evaluación de Biotipos.`;
       await navigator.clipboard.writeText(text);
       alert('¡Resultado copiado al portapapeles!');
     } catch(e) {
@@ -72,9 +73,9 @@ export function ResultsScreen({ result, onRestart }: { result: TestResult, onRes
       {/* Dynamic Header */}
       <nav className="h-16 border-b border-app-border px-4 md:px-8 flex items-center justify-between bg-[#080808] no-print shrink-0 overflow-x-auto">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full gold-gradient flex items-center justify-center text-black font-extrabold text-xs shrink-0 shadow-lg shadow-amber-500/15">RGP</div>
+          <Logo className="w-8 h-8 drop-shadow-[0_0_15px_rgba(212,175,55,0.2)]" />
           <span className="text-xs font-semibold tracking-wider md:tracking-widest uppercase whitespace-nowrap font-display">
-            AUDITORÍA DE BIOTIPO <span className="gold-text font-bold">V2.0</span>
+            AUDITORÍA DE BIOTIPO
           </span>
         </div>
         <div className="flex items-center gap-3 md:gap-4 ml-4">
@@ -175,7 +176,7 @@ export function ResultsScreen({ result, onRestart }: { result: TestResult, onRes
                 <span className="text-[10px] uppercase tracking-widest text-gray-500 font-bold flex items-center gap-1.5 font-display">
                   <Layers className="w-3.5 h-3.5 text-amber-500/80" /> Análisis de 6 Dimensiones
                 </span>
-                <span className="text-[9px] uppercase text-gray-500 tracking-widest">Auditoría RGP</span>
+                <span className="text-[9px] uppercase text-gray-500 tracking-widest">Auditoría Psico-Física</span>
               </div>
               
               <RadarChart result={result} className="w-full max-w-[270px] drop-shadow-[0_0_20px_rgba(212,175,55,0.12)] my-4" />
@@ -256,7 +257,7 @@ export function ResultsScreen({ result, onRestart }: { result: TestResult, onRes
             </div>
           </section>
 
-          {/* RGP V2.0 EXCLUSVE: DEEP MASK ANALYSIS (BIOLOGICAL COST & STRESS) */}
+          {/* ANÁLISIS DE MÁSCARA ADAPTATIVA: COSTO BIOLÓGICO Y ESTRÉS */}
           <section className="bg-app-card border border-app-border rounded-2xl p-6 relative overflow-hidden">
             <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
               <BrainCircuit className="w-40 h-40" />
@@ -394,10 +395,10 @@ export function ResultsScreen({ result, onRestart }: { result: TestResult, onRes
             </section>
           )}
 
-          {/* PROTOCOLO INTERINTEGRADO V2.0 */}
+          {/* PROTOCOLO INTERINTEGRADO */}
           <section className="space-y-6">
             <h3 className="text-xl font-bold uppercase tracking-tight text-white font-display flex items-center gap-2">
-              <Compass className="w-6 h-6 text-amber-500" /> Protocolo de Reequilibrio para Versión 2.0
+              <Compass className="w-6 h-6 text-amber-500" /> Protocolo de Reequilibrio
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -459,7 +460,7 @@ export function ResultsScreen({ result, onRestart }: { result: TestResult, onRes
                 </div>
                 <div className="space-y-3 text-xs leading-relaxed text-gray-300">
                   <p>
-                    Tu medicina integral según el Método de Ro García Platas consiste en desarrollar y sintonizar la energía de tu biotipo complementario: <strong className="text-amber-200 uppercase">{physicalProfile.complementary}</strong> {BIOTYPES[physicalProfile.complementary].symbol}.
+                    Tu camino de integración y equilibrio biocuántico consiste en desarrollar y sintonizar la energía de tu biotipo complementario: <strong className="text-amber-200 uppercase">{physicalProfile.complementary}</strong> {BIOTYPES[physicalProfile.complementary].symbol}.
                   </p>
                   <ul className="space-y-2.5 list-disc pl-4 text-[11px] text-gray-400">
                     {physicalProfile.complementary === 'flematico' && (
@@ -541,10 +542,9 @@ export function ResultsScreen({ result, onRestart }: { result: TestResult, onRes
       </div>
 
       {/* FOOTER */}
-      <footer className="py-4 px-8 flex items-center justify-center bg-[#050505] border-t border-app-border shrink-0 no-print">
-        <p className="text-[9px] uppercase tracking-[0.3em] text-gray-600 text-center max-w-xl">
-          Esta auditoría basada en biocuántica e integración humana del Método de Ro García Platas es puramente educativa. No reemplaza supervisión de salud profesional.
-        </p>
+      <footer className="py-6 px-8 flex flex-col sm:flex-row items-center justify-between bg-[#050505] border-t border-app-border gap-2 shrink-0 no-print text-[9px] uppercase tracking-[0.25em] text-gray-500 font-display">
+        <span>© Auditoría de Biotipos</span>
+        <span>Biocuántica e Integración Humana</span>
       </footer>
     </motion.div>
   );

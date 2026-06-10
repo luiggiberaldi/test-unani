@@ -68,7 +68,7 @@ export const BIOTYPES: Record<Biotype, BiotypeProfile> = {
     id: 'melancolico',
     name: 'El que profundiza',
     color: 'emerald',
-    symbol: '🌑',
+    symbol: '🌍',
     element: 'Tierra',
     temperature: 'Frío + Seco',
     description: 'El melancólico es el biotipo de la profundidad, el análisis y la excelencia interna. Tiene una inteligencia introspectiva y una capacidad única para ver lo que otros no ven. Su cuerpo tiende a ser delgado, de rasgos finos, con tendencia a la tensión muscular y el frío. Su mayor don es su capacidad de pensar profundo, crear con excelencia y sentir con intensidad. Su mayor sombra es la tendencia al perfeccionismo paralizante, la autoexigencia destructiva y el aislamiento.',

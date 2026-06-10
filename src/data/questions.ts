@@ -126,3 +126,37 @@ export const QUESTIONS: Question[] = [
   ...buildQuestions(rawM5, 'm5', 1.5),
   ...buildQuestions(rawM6, 'm6', 1),
 ];
+
+export function getFilteredQuestions(isDeepMode: boolean): Question[] {
+  if (isDeepMode) {
+    return QUESTIONS;
+  }
+  
+  const grouped: Record<string, Question[]> = {};
+  QUESTIONS.forEach(q => {
+    if (!grouped[q.moduleId]) grouped[q.moduleId] = [];
+    grouped[q.moduleId].push(q);
+  });
+
+  const selected: Question[] = [];
+  const moduleOrder = ['m1', 'm2', 'm3', 'm4', 'm5', 'm6'];
+  
+  moduleOrder.forEach(moduleId => {
+    const qs = grouped[moduleId] || [];
+    if (qs.length === 0) return;
+    
+    // Quick Mode uses a curated, representative set of 30 total questions:
+    // m1: 6, m2: 5, m3: 5, m4: 5, m5: 5, m6: 4
+    const targetCount = moduleId === 'm1' ? 6 : (moduleId === 'm6' ? 4 : 5);
+    
+    for (let i = 0; i < targetCount; i++) {
+      const index = Math.min(Math.floor((i * qs.length) / targetCount), qs.length - 1);
+      const q = qs[index];
+      if (!selected.some(x => x.id === q.id)) {
+        selected.push(q);
+      }
+    }
+  });
+  
+  return selected;
+}

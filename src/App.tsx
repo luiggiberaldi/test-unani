@@ -26,6 +26,10 @@ export default function App() {
           setAnswers(parsed);
         }
       }
+      const savedDeep = localStorage.getItem('biotype_is_deep_mode');
+      if (savedDeep !== null) {
+        setIsDeepMode(savedDeep === 'true');
+      }
     } catch (e) {
       console.error('Failed to parse saved answers', e);
     }
@@ -36,10 +40,20 @@ export default function App() {
     localStorage.setItem('biotype_answers', JSON.stringify(newAnswers));
   };
 
-  const clearSession = () => {
+  const handleStartFresh = () => {
     localStorage.removeItem('biotype_answers');
+    localStorage.removeItem('biotype_is_deep_mode');
     setAnswers([]);
     setResult(null);
+    setIsDeepMode(false);
+  };
+
+  const clearSession = () => {
+    localStorage.removeItem('biotype_answers');
+    localStorage.removeItem('biotype_is_deep_mode');
+    setAnswers([]);
+    setResult(null);
+    setIsDeepMode(false);
     setScreen('welcome');
   };
 
@@ -67,7 +81,7 @@ export default function App() {
                 if (answers.length > 0) {
                   // If they hit primary button but had saved progress, ask if they want to clear or continue.
                   // We'll just start fresh if they don't click the secondary Restore button.
-                  clearSession();
+                  handleStartFresh();
                 }
                 setScreen('instructions');
               }} 
@@ -79,7 +93,10 @@ export default function App() {
             <InstructionsScreen 
               key="instructions"
               isDeepMode={isDeepMode}
-              onSetDeepMode={setIsDeepMode}
+              onSetDeepMode={(isDeep) => {
+                setIsDeepMode(isDeep);
+                localStorage.setItem('biotype_is_deep_mode', isDeep ? 'true' : 'false');
+              }}
               onNext={() => setScreen('wizard')} 
             />
           )}
