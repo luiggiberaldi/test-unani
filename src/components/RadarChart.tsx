@@ -16,10 +16,11 @@ const BIOTYPE_COLORS: Record<Biotype, string> = {
 };
 
 export function RadarChart({ result, className }: RadarChartProps) {
-  const size = 300;
+  const size = 320; // slightly larger canvas to accommodate pushed labels
   const center = size / 2;
-  const maxRadius = center - 40; // Leave room for labels
+  const maxRadius = center - 55; // Pushed back further to give 55px padding for labels
   const numAxes = 6;
+  
   const labelsMap: Record<string, string> = {
     fisico: 'Cuerpo',
     energia: 'Relación',
@@ -50,14 +51,11 @@ export function RadarChart({ result, className }: RadarChartProps) {
     const biotypes: Biotype[] = ['colerico', 'flematico', 'sanguineo', 'melancolico'];
     return biotypes.map(b => {
       const points = MODULES.map((m, i) => {
-        // Find the module value. moduleScores is keyed by moduleId (m1, m2...)
         const val = result.moduleScores[m.id]?.[b] || 0;
         const { x, y } = getPoint(val, i);
         return `${x},${y}`;
       }).join(' ');
 
-      // Only render polygons that have significant presence to avoid clutter,
-      // but rendering all 4 with low opacity is also fine. Let's render all.
       return {
         biotype: b,
         points,
@@ -72,75 +70,127 @@ export function RadarChart({ result, className }: RadarChartProps) {
   }, [result]);
 
   return (
-    <div className={cn("relative w-full aspect-square max-w-[400px] mx-auto", className)}>
-      <svg viewBox={`0 0 ${size} ${size}`} className="w-full h-full overflow-visible">
-        {/* Radar grid 
-          Let's draw concentric pentagons/hexagons 
-        */}
-        {[25, 50, 75, 100].map(level => {
-          const points = Array.from({ length: numAxes }).map((_, i) => {
-            const { x, y } = getPoint(level, i);
-            return `${x},${y}`;
-          }).join(' ');
-          
-          return (
-            <polygon 
-              key={level} 
-              points={points} 
-              className="radar-grid" 
-              strokeDasharray={level === 50 ? "4 4" : "0"}
+    <div className={cn("flex flex-col items-center w-full max-w-[400px] mx-auto", className)}>
+      <div className="relative w-full aspect-square">
+        <svg viewBox={`0 0 ${size} ${size}`} className="w-full h-full overflow-visible">
+          {/* Radar grid */}
+          {[25, 50, 75, 100].map(level => {
+            const points = Array.from({ length: numAxes }).map((_, i) => {
+              const { x, y } = getPoint(level, i);
+              return `${x},${y}`;
+            }).join(' ');
+            
+            return (
+              <polygon 
+                key={level} 
+                points={points} 
+                className="radar-grid" 
+                strokeDasharray={level === 50 ? "4 4" : "0"}
+              />
+            );
+          })}
+
+          {/* Scale labels (percentages on top axis) */}
+          {[25, 50, 75, 100].map(level => {
+            const { x, y } = getPoint(level, 0); // straight up
+            return (
+              <text
+                key={`scale-${level}`}
+                x={x + 6}
+                y={y}
+                className="text-[8px] font-mono font-medium fill-gray-600 no-print select-none"
+                textAnchor="start"
+                dominantBaseline="middle"
+              >
+                {level}%
+              </text>
+            );
+          })}
+
+          {/* Axes lines */}
+          {axes.map((axis, i) => (
+            <line 
+              key={i} 
+              x1={center} 
+              y1={center} 
+              x2={axis.x} 
+              y2={axis.y} 
+              className="radar-grid"
             />
-          );
-        })}
+          ))}
 
-        {/* Axes lines */}
-        {axes.map((axis, i) => (
-          <line 
-            key={i} 
-            x1={center} 
-            y1={center} 
-            x2={axis.x} 
-            y2={axis.y} 
-            className="radar-grid"
-          />
-        ))}
+          {/* Polygons */}
+          {polygons.map((poly) => (
+            <polygon
+              key={poly.biotype}
+              points={poly.points}
+              fill={poly.color}
+              stroke={poly.color}
+              strokeWidth={poly.biotype === result.dominant ? "2.5" : (poly.biotype === result.secondary ? "1.2" : "0.5")}
+              fillOpacity={poly.biotype === result.dominant ? "0.35" : (poly.biotype === result.secondary ? "0.12" : "0.02")}
+              className="transition-all duration-700 ease-in-out"
+              {...(poly.biotype === result.dominant ? { className: "radar-value transition-all duration-700 ease-in-out" } : {})}
+            />
+          ))}
 
-        {/* Polygons */}
-        {polygons.map((poly) => (
-          <polygon
-            key={poly.biotype}
-            points={poly.points}
-            fill={poly.color}
-            stroke={poly.color}
-            strokeWidth={poly.biotype === result.dominant ? "2.5" : (poly.biotype === result.secondary ? "1" : "0.4")}
-            fillOpacity={poly.biotype === result.dominant ? "0.45" : (poly.biotype === result.secondary ? "0.15" : "0.05")}
-            className="transition-all duration-700 ease-in-out"
-            {...(poly.biotype === result.dominant ? { className: "radar-value transition-all duration-700 ease-in-out" } : {})}
-          />
-        ))}
+          {/* Labels */}
+          {axes.map((axis, i) => {
+            const angle = (Math.PI * 2 * i) / numAxes - Math.PI / 2;
+            const labelR = maxRadius + 16; // Push out from grid edge
+            const lx = center + labelR * Math.cos(angle);
+            const ly = center + labelR * Math.sin(angle);
+            
+            // Dynamic textAnchor and vertical offset to completely prevent overlap
+            let textAnchor = 'middle';
+            let dy = '0.35em';
+            
+            if (Math.cos(angle) > 0.1) {
+              textAnchor = 'start';
+            } else if (Math.cos(angle) < -0.1) {
+              textAnchor = 'end';
+            }
+            
+            if (i === 0) {
+              dy = '-0.6em'; // Move up for CUERPO
+            } else if (i === 3) {
+              dy = '1.2em';  // Move down for VIDA
+            }
+            
+            return (
+              <text
+                key={`label-${i}`}
+                x={lx}
+                y={ly}
+                textAnchor={textAnchor}
+                dy={dy}
+                className="text-[9px] font-semibold fill-gray-400 uppercase tracking-[0.15em] select-none"
+              >
+                {axis.label}
+              </text>
+            );
+          })}
+        </svg>
+      </div>
 
-        {/* Labels */}
-        {axes.map((axis, i) => {
-          const angle = (Math.PI * 2 * i) / numAxes - Math.PI / 2;
-          // Push labels out a bit
-          const labelR = maxRadius + 20;
-          const lx = center + labelR * Math.cos(angle);
-          const ly = center + labelR * Math.sin(angle);
-          
-          return (
-            <text
-              key={`label-${i}`}
-              x={lx}
-              y={ly}
-              textAnchor="middle"
-              dominantBaseline="middle"
-              className="text-[10px] font-medium fill-gray-500 uppercase tracking-[0.2em]"
-            >
-              {axis.label}
-            </text>
-          );
-        })}
-      </svg>
+      {/* Chart Legend */}
+      <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 mt-4 text-[9px] uppercase tracking-wider font-semibold text-gray-500 no-print select-none">
+        <div className="flex items-center gap-1.5">
+          <span className="w-2.5 h-2.5 rounded-full bg-[#f27d26]" />
+          <span>Fuego (Colérico)</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-2.5 h-2.5 rounded-full bg-[#7c4dff]" />
+          <span>Agua (Flemático)</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-2.5 h-2.5 rounded-full bg-[#ff5252]" />
+          <span>Aire (Sanguíneo)</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-2.5 h-2.5 rounded-full bg-[#00e676]" />
+          <span>Tierra (Melancólico)</span>
+        </div>
+      </div>
     </div>
   );
 }
