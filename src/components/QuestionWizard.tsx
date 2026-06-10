@@ -6,6 +6,7 @@ import { Question, Answer } from '../types';
 import { QUESTIONS, getFilteredQuestions } from '../data/questions';
 import { MODULES } from '../data/biotypes';
 import { ProgressBar } from './ProgressBar';
+import { AdsterraBanner } from './AdsterraBanner';
 import { cn } from '../lib/utils';
 
 interface QuestionWizardProps {
@@ -218,6 +219,13 @@ export function QuestionWizard({ initialAnswers, isDeepMode, onComplete, onSave 
           </motion.div>
         </AnimatePresence>
       </div>
+
+      {/* ADSTERRA WIZARD BANNER */}
+      <AdsterraBanner 
+        id="99d480ff1ca26d0294cbba85085cfab0" 
+        format="468x60" 
+        className="w-full max-w-md mx-auto mt-6"
+      />
 
       <div className="flex justify-between mt-auto pt-8 pb-8">
         <button

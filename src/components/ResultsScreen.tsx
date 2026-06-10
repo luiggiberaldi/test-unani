@@ -29,6 +29,7 @@ import { TestResult, Biotype } from '../types';
 import { BIOTYPES, MIXED_PROFILES } from '../data/biotypes';
 import { RadarChart } from './RadarChart';
 import { Logo } from './Logo';
+import { AdsterraBanner } from './AdsterraBanner';
 
 function getDimensionLeader(
   moduleScores: Record<string, Record<Biotype, number>>,
@@ -179,6 +180,13 @@ export function ResultsScreen({ result, onRestart }: { result: TestResult, onRes
               </span>
             </div>
           </section>
+
+          {/* ADSTERRA TOP BANNER */}
+          <AdsterraBanner 
+            id="99d480ff1ca26d0294cbba85085cfab0" 
+            format="728x90" 
+            className="w-full max-w-5xl mx-auto"
+          />
 
           {/* MAIN COLUMN OVERVIEW (Dominant Profiling & Multi-dimensional Radar) */}
           <section className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -807,6 +815,13 @@ export function ResultsScreen({ result, onRestart }: { result: TestResult, onRes
 
         </main>
       </div>
+
+      {/* ADSTERRA BOTTOM BANNER */}
+      <AdsterraBanner 
+        id="99d480ff1ca26d0294cbba85085cfab0" 
+        format="728x90" 
+        className="w-full max-w-5xl mx-auto mb-6"
+      />
 
       {/* FOOTER */}
       <footer className="py-6 px-8 flex flex-col sm:flex-row items-center justify-between bg-[#050505] border-t border-app-border gap-2 shrink-0 no-print text-[9px] uppercase tracking-[0.25em] text-gray-500 font-display">

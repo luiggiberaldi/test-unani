@@ -3,6 +3,7 @@ import { ArrowRight } from 'lucide-react';
 import { Logo } from './Logo';
 import { TestResult } from '../types';
 import { BIOTYPES } from '../data/biotypes';
+import { AdsterraBanner } from './AdsterraBanner';
 
 interface WelcomeScreenProps {
   onNext: () => void;
@@ -98,6 +99,13 @@ export function WelcomeScreen({ onNext, hasSavedProgress, onRestore, savedResult
           <span>80 Preguntas</span>
         </div>
       </div>
+
+      {/* ADSTERRA WELCOME BANNER */}
+      <AdsterraBanner 
+        id="99d480ff1ca26d0294cbba85085cfab0" 
+        format="468x60" 
+        className="w-full max-w-md mx-auto mt-6"
+      />
     </motion.div>
   );
 }
