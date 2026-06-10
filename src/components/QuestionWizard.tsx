@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { track } from '../lib/analytics';
 import { motion, AnimatePresence } from 'motion/react';
 import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
 import { Question, Answer } from '../types';
@@ -39,6 +40,15 @@ export function QuestionWizard({ initialAnswers, isDeepMode, onComplete, onSave 
   const safeIndex = Math.max(0, Math.min(currentIndex, activeQuestions.length - 1));
   const question = activeQuestions[safeIndex] || activeQuestions[0] || QUESTIONS[0];
   
+  useEffect(() => {
+    if (question?.moduleId) {
+      track('module_reached', { 
+        module: question.moduleId,
+        questionIndex: currentIndex
+      });
+    }
+  }, [question?.moduleId]);
+
   // Determine current module
   const moduleIndex = question ? MODULES.findIndex(m => m.id === question.moduleId) : 0;
   const currentModule = MODULES[moduleIndex >= 0 ? moduleIndex : 0];

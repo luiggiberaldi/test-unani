@@ -66,56 +66,105 @@
 }
 
 @media print {
+  /* Hide all elements that are not part of the main report */
+  .no-print, nav, header, footer, button, .btn-primary, .btn-secondary {
+    display: none !important;
+  }
+
+  /* Force background colors and colors to print */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
   body {
     background: #ffffff !important;
-    color: #111111 !important;
+    color: #1a1a1a !important;
+    font-size: 11pt !important;
+    line-height: 1.5 !important;
   }
 
-  .no-print {
-    display: none !important;
+  /* Make sure all container/card backgrounds are light and high contrast */
+  .bg-app-bg {
+    background: #ffffff !important;
   }
-
-  .glass-card {
-    background: #f9f9f9 !important;
-    border: 1px solid #e0e0e0 !important;
+  
+  /* Select all cards and make them look premium on paper */
+  .bg-app-card, 
+  .glass-card, 
+  div[class*="bg-app-card"], 
+  section[class*="bg-app-card"],
+  .bg-white\/5,
+  div[class*="bg-white/5"] {
+    background: #fdfdfd !important;
+    border: 1px solid #d1d5db !important;
     box-shadow: none !important;
+    color: #1a1a1a !important;
   }
 
-  nav, header, footer, button {
-    display: none !important;
+  /* Reset all dark/white borders to a clean light grey */
+  .border, 
+  .border-app-border,
+  .border-white\/5,
+  .border-white\/10,
+  .border-white\/20,
+  div[class*="border-white"] {
+    border-color: #d1d5db !important;
   }
 
-  main {
-    padding: 0 !important;
-    margin: 0 !important;
-    max-width: 100% !important;
+  /* Make text highly readable on white paper */
+  .text-gray-300, 
+  .text-gray-400, 
+  .text-slate-400,
+  .text-slate-500,
+  .text-\[\#e5e7eb\],
+  .text-white,
+  .text-white\/90,
+  .text-gray-200 {
+    color: #2d3748 !important;
   }
 
-  h1, h2, h3, h4, h5 {
-    color: #111111 !important;
+  .text-amber-500, 
+  .text-amber-400, 
+  .gold-text,
+  span[class*="gold-text"] {
+    color: #b8860b !important;
+    font-weight: 700 !important;
+    background: none !important;
+    -webkit-text-fill-color: initial !important;
   }
 
-  p, span, li {
-    color: #333333 !important;
-  }
+  /* Specific biotype indicators */
+  .text-orange-500 { color: #c05621 !important; }
+  .text-violet-400 { color: #553c9a !important; }
+  .text-red-500 { color: #9b2c2c !important; }
+  .text-emerald-400 { color: #22543d !important; }
 
-  .gold-text {
-    color: #a07800 !important;
-  }
+  .bg-orange-500\/10 { background-color: #fffff0 !important; border-color: #fbd38d !important; }
+  .bg-violet-400\/10 { background-color: #faf5ff !important; border-color: #e9d8fd !important; }
+  .bg-red-500\/10 { background-color: #fff5f5 !important; border-color: #fed7d7 !important; }
+  .bg-emerald-400\/10 { background-color: #f0fff4 !important; border-color: #c6f6d5 !important; }
 
-  .gold-gradient {
-    background: #a07800 !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-
+  /* Ensure Radar Chart and SVG items scale properly */
   svg {
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+    max-width: 100% !important;
+    page-break-inside: avoid !important;
   }
 
+  /* Page breaks for a clean multi-page document layout if it flows */
+  h1, h2, h3, section {
+    page-break-inside: avoid !important;
+  }
+
+  /* Clean up grid for print layout */
+  .grid {
+    display: grid !important;
+  }
+
+  /* Adjust page layout margins */
   @page {
-    margin: 1.5cm;
-    size: A4;
+    margin: 1.2cm !important;
+    size: A4 portrait;
   }
 }

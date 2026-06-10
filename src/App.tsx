@@ -7,6 +7,7 @@ import { QuestionWizard } from './components/QuestionWizard';
 import { ProcessingScreen } from './components/ProcessingScreen';
 import { ResultsScreen } from './components/ResultsScreen';
 import { calculateResults } from './lib/scoring';
+import { track } from './lib/analytics';
 
 type Screen = 'welcome' | 'instructions' | 'wizard' | 'processing' | 'results';
 
@@ -58,6 +59,7 @@ export default function App() {
   };
 
   const clearSession = () => {
+    track('test_restarted');
     localStorage.removeItem('biotype_answers');
     localStorage.removeItem('biotype_is_deep_mode');
     localStorage.removeItem('biotype_last_result');
@@ -77,6 +79,13 @@ export default function App() {
 
   const handleProcessingComplete = () => {
     const finalResult = calculateResults(answers);
+    track('test_completed', {
+      dominant: finalResult.dominant,
+      secondary: finalResult.secondary ?? 'none',
+      confidence: finalResult.confidence,
+      isMixed: finalResult.isMixed,
+      consistency: finalResult.consistencyScore
+    });
     setResult(finalResult);
     localStorage.setItem('biotype_last_result', JSON.stringify(finalResult));
     localStorage.setItem('biotype_last_result_date', new Date().toISOString());
@@ -103,6 +112,7 @@ export default function App() {
                   // We'll just start fresh if they don't click the secondary Restore button.
                   handleStartFresh();
                 }
+                track('test_started', { mode: isDeepMode ? 'deep' : 'quick' });
                 setScreen('instructions');
               }} 
               onRestore={() => setScreen('wizard')}

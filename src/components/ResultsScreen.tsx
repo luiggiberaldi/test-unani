@@ -1,4 +1,6 @@
-import { motion } from 'motion/react';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { track } from '../lib/analytics';
 import { 
   Download, 
   RefreshCw, 
@@ -19,7 +21,9 @@ import {
   Thermometer,
   BrainCircuit,
   Eye,
-  RotateCcw
+  RotateCcw,
+  Copy,
+  Check
 } from 'lucide-react';
 import { TestResult, Biotype } from '../types';
 import { BIOTYPES, MIXED_PROFILES } from '../data/biotypes';
@@ -43,6 +47,17 @@ function getDimensionLeader(
 }
 
 export function ResultsScreen({ result, onRestart }: { result: TestResult, onRestart: () => void, key?: string }) {
+  const [isShareOpen, setIsShareOpen] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
+
+  useEffect(() => {
+    track('results_viewed', {
+      dominant: result.dominant,
+      secondary: result.secondary ?? 'none',
+      isMixed: result.isMixed
+    });
+  }, []);
+
   const domProfile = BIOTYPES[result.dominant];
   const secProfile = result.secondary ? BIOTYPES[result.secondary] : null;
   const physicalProfile = BIOTYPES[result.physicalBiotype];
@@ -58,16 +73,40 @@ export function ResultsScreen({ result, onRestart }: { result: TestResult, onRes
       : null);
 
   const handlePrint = () => {
+    track('result_exported', { dominant: result.dominant });
     window.print();
   };
 
-  const handleShare = async () => {
+  const shareText = `Mi Biotipo Dominante es ${domProfile.name} ${domProfile.symbol}${secProfile ? ` con mezcla de ${secProfile.name}` : ''}. Coherencia Orgánica: ${result.consistencyScore}%. ¡Descubre el tuyo aquí!`;
+  const shareUrl = typeof window !== 'undefined' ? (window.location.origin + window.location.pathname) : '';
+
+  const handleShareClick = async () => {
+    track('result_shared', { dominant: result.dominant });
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Auditoría de Biotipo RGP',
+          text: shareText,
+          url: shareUrl,
+        });
+        track('result_shared_native', { dominant: result.dominant });
+      } catch (e) {
+        setIsShareOpen(true);
+      }
+    } else {
+      setIsShareOpen(true);
+    }
+  };
+
+  const copyToClipboard = async () => {
     try {
-      const text = `Mi Biotipo Dominante es ${domProfile.name} ${domProfile.symbol}${secProfile ? ` con mezcla de ${secProfile.name}` : ''}. Coherencia Orgánica: ${result.consistencyScore}%. Descubre el tuyo en la Evaluación de Biotipos.`;
-      await navigator.clipboard.writeText(text);
-      alert('¡Resultado copiado al portapapeles!');
-    } catch(e) {
-      console.error(e);
+      await navigator.clipboard.writeText(shareUrl);
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+      track('result_link_copied', { dominant: result.dominant });
+    } catch (err) {
+      console.error('Failed to copy!', err);
     }
   };
 
@@ -108,7 +147,7 @@ export function ResultsScreen({ result, onRestart }: { result: TestResult, onRes
             <RotateCcw className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Nuevo Test</span>
           </button>
-          <button onClick={handleShare} className="px-3.5 py-1.5 border border-white/15 rounded-full text-[11px] hover:bg-white/5 transition-colors whitespace-nowrap flex items-center gap-1.5">
+          <button onClick={handleShareClick} className="px-3.5 py-1.5 border border-white/15 rounded-full text-[11px] hover:bg-white/5 transition-colors whitespace-nowrap flex items-center gap-1.5 cursor-pointer">
             <Share2 className="w-3.5 h-3.5 text-amber-500" />
             Compartir
           </button>
@@ -207,13 +246,13 @@ export function ResultsScreen({ result, onRestart }: { result: TestResult, onRes
               <RadarChart result={result} className="w-full max-w-[270px] drop-shadow-[0_0_20px_rgba(212,175,55,0.12)] my-4" />
               
               <div className="w-full mt-2 grid grid-cols-2 gap-3 text-center no-print">
-                <div className="bg-white/5 p-2 rounded-xl text-left border border-white/5">
-                  <span className="text-[9px] uppercase text-gray-500 block mb-0.5">Motor de Gasto</span>
-                  <span className="text-xs font-semibold block text-gray-300 truncate">{domProfile.energy.split('.')[0]}</span>
+                <div className="bg-white/5 p-3.5 rounded-xl text-left border border-white/5">
+                  <span className="text-[9px] uppercase text-gray-500 block mb-1">Motor de Gasto</span>
+                  <span className="text-xs font-normal block text-gray-300 leading-relaxed">{domProfile.energy}</span>
                 </div>
-                <div className="bg-white/5 p-2 rounded-xl text-left border border-white/5">
-                  <span className="text-[9px] uppercase text-gray-500 block mb-0.5 font-display">Fuerza Interior</span>
-                  <span className="text-xs font-semibold block text-gray-300 truncate">{domProfile.emotional.split('.')[0]}</span>
+                <div className="bg-white/5 p-3.5 rounded-xl text-left border border-white/5">
+                  <span className="text-[9px] uppercase text-gray-500 block mb-1 font-display">Fuerza Interior</span>
+                  <span className="text-xs font-normal block text-gray-300 leading-relaxed">{domProfile.emotional}</span>
                 </div>
               </div>
             </div>
@@ -773,6 +812,144 @@ export function ResultsScreen({ result, onRestart }: { result: TestResult, onRes
         <span>© Auditoría de Biotipos</span>
         <span>Biocuántica e Integración Humana</span>
       </footer>
+
+      {/* SHARE MODAL */}
+      <AnimatePresence>
+        {isShareOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm no-print">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 cursor-pointer"
+              onClick={() => setIsShareOpen(false)}
+            />
+            
+            <motion.div
+              initial={{ scale: 0.95, y: 15, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.95, y: 15, opacity: 0 }}
+              className="relative w-full max-w-md bg-[#0c0c0c] border border-white/10 rounded-2xl p-6 shadow-2xl overflow-hidden z-10"
+            >
+              {/* Background Glow */}
+              <div className="absolute -top-12 -right-12 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
+              
+              <div className="flex items-center justify-between pb-4 border-b border-white/5">
+                <h3 className="text-base font-semibold text-white tracking-wide uppercase font-display flex items-center gap-2">
+                  <Share2 className="w-4 h-4 text-amber-500" />
+                  Compartir Resultados
+                </h3>
+                <button 
+                  onClick={() => setIsShareOpen(false)}
+                  className="text-gray-400 hover:text-white transition-colors cursor-pointer text-lg font-light w-6 h-6 flex items-center justify-center rounded-full hover:bg-white/5"
+                >
+                  &times;
+                </button>
+              </div>
+
+              <div className="mt-4 space-y-4">
+                <p className="text-xs text-gray-400 font-light leading-relaxed">
+                  Comparte tu auditoría de biotipo RGP en tus redes sociales profesionales o copia el enlace de acceso directo.
+                </p>
+
+                {/* Preview Box */}
+                <div className="bg-white/5 p-4 rounded-xl border border-white/5 text-left space-y-1 relative">
+                  <span className="text-[9px] uppercase tracking-wider text-amber-500 font-bold">Resumen del resultado</span>
+                  <div className="text-sm font-semibold text-white capitalize flex items-center gap-1.5">
+                    <span>{domProfile.symbol}</span>
+                    <span>Biotipo Dominante: {domProfile.id}</span>
+                  </div>
+                  {secProfile && (
+                    <div className="text-xs text-gray-400 capitalize font-medium">
+                      Mezcla secundaria: {secProfile.symbol} {secProfile.id}
+                    </div>
+                  )}
+                  <div className="text-xs text-gray-400 font-medium">
+                    Coherencia Orgánica: <strong className="text-amber-400">{result.consistencyScore}%</strong>
+                  </div>
+                </div>
+
+                {/* Direct Link Copy */}
+                <div className="space-y-1.5">
+                  <label className="text-[10px] uppercase tracking-wider text-gray-500 font-bold block">Enlace de acceso directo</label>
+                  <div className="flex gap-2">
+                    <input 
+                      type="text" 
+                      readOnly 
+                      value={shareUrl} 
+                      className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-gray-300 focus:outline-none focus:border-amber-500/50 select-all"
+                    />
+                    <button 
+                      onClick={copyToClipboard}
+                      className="px-4 py-2 gold-gradient hover:opacity-90 text-black font-semibold text-xs rounded-xl transition-all duration-200 flex items-center gap-1.5 cursor-pointer shrink-0"
+                    >
+                      {isCopied ? (
+                        <>
+                          <Check className="w-3.5 h-3.5" />
+                          ¡Copiado!
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5" />
+                          Copiar
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Social Buttons Grid */}
+                <div className="space-y-2 pt-2">
+                  <label className="text-[10px] uppercase tracking-wider text-gray-500 font-bold block">Compartir en Redes</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {/* LinkedIn */}
+                    <a 
+                      href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      onClick={() => track('result_shared_network', { network: 'linkedin', dominant: result.dominant })}
+                      className="flex items-center justify-center gap-2 p-2.5 rounded-xl border border-[#0a66c2]/20 bg-[#0a66c2]/5 hover:bg-[#0a66c2]/10 text-white font-medium text-xs transition-colors"
+                    >
+                      <svg className="w-4 h-4 fill-current text-[#0a66c2]" viewBox="0 0 24 24">
+                        <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+                      </svg>
+                      LinkedIn
+                    </a>
+
+                    {/* Twitter / X */}
+                    <a 
+                      href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`}
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      onClick={() => track('result_shared_network', { network: 'twitter', dominant: result.dominant })}
+                      className="flex items-center justify-center gap-2 p-2.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-white font-medium text-xs transition-colors"
+                    >
+                      <svg className="w-3.5 h-3.5 fill-current text-white" viewBox="0 0 24 24">
+                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                      </svg>
+                      Twitter / X
+                    </a>
+
+                    {/* WhatsApp */}
+                    <a 
+                      href={`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + ' ' + shareUrl)}`}
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      onClick={() => track('result_shared_network', { network: 'whatsapp', dominant: result.dominant })}
+                      className="flex items-center justify-center gap-2 p-2.5 rounded-xl border border-[#25d366]/20 bg-[#25d366]/5 hover:bg-[#25d366]/10 text-white font-medium text-xs transition-colors col-span-2"
+                    >
+                      <svg className="w-4 h-4 fill-current text-[#25d366]" viewBox="0 0 24 24">
+                        <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.73-1.455L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.37 9.864-9.799.002-2.63-1.023-5.101-2.885-6.965C16.59 1.977 14.113.953 11.5.953c-5.44 0-9.866 4.372-9.87 9.802 0 1.714.463 3.39 1.337 4.842l-.994 3.63 3.714-.973zm12.338-7.516c-.272-.136-1.61-.795-1.86-.886-.25-.09-.432-.136-.613.136-.182.273-.705.886-.864 1.068-.159.182-.318.204-.59.068-.273-.136-1.15-.424-2.19-1.353-.809-.721-1.355-1.614-1.514-1.886-.159-.273-.017-.42.12-.556.123-.122.272-.318.409-.477.136-.159.182-.272.272-.454.09-.181.045-.34-.023-.477-.068-.136-.613-1.477-.84-2.023-.222-.534-.485-.46-.662-.46-.17-.008-.367-.01-.563-.01-.197 0-.516.074-.787.374-.27.301-1.033 1.01-1.033 2.463 0 1.453 1.056 2.859 1.203 3.057.148.198 2.08 3.175 5.038 4.453.704.304 1.254.486 1.681.622.709.226 1.354.194 1.864.118.568-.084 1.61-.659 1.834-1.295.224-.636.224-1.181.157-1.295-.067-.114-.249-.205-.521-.341z"/>
+                      </svg>
+                      Compartir por WhatsApp
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

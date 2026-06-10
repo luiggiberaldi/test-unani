@@ -20,7 +20,15 @@ export function RadarChart({ result, className }: RadarChartProps) {
   const center = size / 2;
   const maxRadius = center - 40; // Leave room for labels
   const numAxes = 6;
-  const axesLabels = MODULES.map(m => m.name.split(' ')[1] || m.key); // Simplified names for chart
+  const labelsMap: Record<string, string> = {
+    fisico: 'Cuerpo',
+    energia: 'Relación',
+    accion: 'Motor',
+    emocion: 'Vida',
+    vinculo: 'Vínculo',
+    adaptacion: 'Máscara',
+  };
+  const axesLabels = MODULES.map(m => labelsMap[m.key] || m.name);
 
   // Calculate coordinates for a point on a specific axis given a value (0-100)
   const getPoint = (value: number, index: number) => {
