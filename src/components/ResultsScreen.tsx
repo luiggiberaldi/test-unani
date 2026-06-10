@@ -142,18 +142,19 @@ export function ResultsScreen({ result, onRestart }: { result: TestResult, onRes
             AUDITORÍA DE BIOTIPO
           </span>
         </div>
-        <div className="flex items-center gap-3 md:gap-4 ml-4">
-          <button onClick={onRestart} className="px-3.5 py-1.5 border border-white/15 rounded-full text-[11px] hover:bg-white/5 transition-colors whitespace-nowrap flex items-center gap-1.5">
+        <div className="flex items-center gap-2 sm:gap-4 ml-4">
+          <button onClick={onRestart} className="px-3 py-1.5 border border-white/15 rounded-full text-[11px] hover:bg-white/5 transition-colors whitespace-nowrap flex items-center gap-1.5 cursor-pointer">
             <RotateCcw className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Nuevo Test</span>
           </button>
-          <button onClick={handleShareClick} className="px-3.5 py-1.5 border border-white/15 rounded-full text-[11px] hover:bg-white/5 transition-colors whitespace-nowrap flex items-center gap-1.5 cursor-pointer">
+          <button onClick={handleShareClick} className="px-3 py-1.5 border border-white/15 rounded-full text-[11px] hover:bg-white/5 transition-colors whitespace-nowrap flex items-center gap-1.5 cursor-pointer">
             <Share2 className="w-3.5 h-3.5 text-amber-500" />
-            Compartir
+            <span className="hidden sm:inline">Compartir</span>
           </button>
-          <button onClick={handlePrint} className="px-4 py-1.5 gold-gradient text-black rounded-full text-[11px] font-bold hover:opacity-95 shadow-lg shadow-amber-500/20 whitespace-nowrap flex items-center gap-1.5">
+          <button onClick={handlePrint} className="px-3.5 py-1.5 gold-gradient text-black rounded-full text-[11px] font-bold hover:opacity-95 shadow-lg shadow-amber-500/20 whitespace-nowrap flex items-center gap-1.5 cursor-pointer">
             <Download className="w-3.5 h-3.5" />
-            Exportar PDF
+            <span className="hidden sm:inline">Exportar PDF</span>
+            <span className="sm:hidden">PDF</span>
           </button>
         </div>
       </nav>
@@ -245,7 +246,7 @@ export function ResultsScreen({ result, onRestart }: { result: TestResult, onRes
               
               <RadarChart result={result} className="w-full max-w-[270px] drop-shadow-[0_0_20px_rgba(212,175,55,0.12)] my-4" />
               
-              <div className="w-full mt-2 grid grid-cols-2 gap-3 text-center no-print">
+              <div className="w-full mt-2 grid grid-cols-1 sm:grid-cols-2 gap-3 text-center no-print">
                 <div className="bg-white/5 p-3.5 rounded-xl text-left border border-white/5">
                   <span className="text-[9px] uppercase text-gray-500 block mb-1">Motor de Gasto</span>
                   <span className="text-xs font-normal block text-gray-300 leading-relaxed">{domProfile.energy}</span>

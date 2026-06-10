@@ -91,15 +91,18 @@ export function RadarChart({ result, className }: RadarChartProps) {
           })}
 
           {/* Scale labels (percentages on top axis) */}
-          {[25, 50, 75, 100].map(level => {
+          {[25, 50, 75].map(level => {
             const { x, y } = getPoint(level, 0); // straight up
             return (
               <text
                 key={`scale-${level}`}
-                x={x + 6}
-                y={y}
-                className="text-[8px] font-mono font-medium fill-gray-600 no-print select-none"
-                textAnchor="start"
+                x={x}
+                y={y + 8} // Shift down slightly to sit nicely inside the segment
+                stroke="#0c0c0c"
+                strokeWidth="4"
+                style={{ paintOrder: 'stroke fill' }}
+                className="text-[8px] font-mono font-semibold fill-gray-500 no-print select-none"
+                textAnchor="middle"
                 dominantBaseline="middle"
               >
                 {level}%
