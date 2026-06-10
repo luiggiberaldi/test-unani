@@ -26,11 +26,36 @@ import { BIOTYPES, MIXED_PROFILES } from '../data/biotypes';
 import { RadarChart } from './RadarChart';
 import { Logo } from './Logo';
 
+function getDimensionLeader(
+  moduleScores: Record<string, Record<Biotype, number>>,
+  moduleIds: string[]
+): Biotype {
+  const combined: Record<Biotype, number> = { colerico: 0, flematico: 0, sanguineo: 0, melancolico: 0 };
+  moduleIds.forEach(id => {
+    if (moduleScores && moduleScores[id]) {
+      (['colerico', 'flematico', 'sanguineo', 'melancolico'] as Biotype[]).forEach(b => {
+        combined[b] += moduleScores[id][b] || 0;
+      });
+    }
+  });
+  return (['colerico', 'flematico', 'sanguineo', 'melancolico'] as Biotype[])
+    .reduce((a, b) => combined[a] >= combined[b] ? a : b);
+}
+
 export function ResultsScreen({ result, onRestart }: { result: TestResult, onRestart: () => void, key?: string }) {
   const domProfile = BIOTYPES[result.dominant];
   const secProfile = result.secondary ? BIOTYPES[result.secondary] : null;
   const physicalProfile = BIOTYPES[result.physicalBiotype];
   const behavioralProfile = BIOTYPES[result.behavioralBiotype];
+
+  const mixedKey = result.secondary 
+    ? `${result.dominant}-${result.secondary}` 
+    : null;
+  const mixedProfile = mixedKey && MIXED_PROFILES[mixedKey] 
+    ? MIXED_PROFILES[mixedKey] 
+    : (result.secondary && MIXED_PROFILES[`${result.secondary}-${result.dominant}`] 
+      ? MIXED_PROFILES[`${result.secondary}-${result.dominant}`] 
+      : null);
 
   const handlePrint = () => {
     window.print();
@@ -257,6 +282,62 @@ export function ResultsScreen({ result, onRestart }: { result: TestResult, onRes
             </div>
           </section>
 
+          {/* MEJORA 2 - BLOQUE DE PERFIL MIXTO EN UI */}
+          {result.isMixed && result.secondary && mixedProfile && (
+            <motion.section 
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="bg-gradient-to-r from-amber-500/5 to-amber-600/5 border border-amber-500/20 rounded-2xl p-6 relative overflow-hidden shadow-lg shadow-amber-500/5"
+            >
+              <div className="absolute right-4 -bottom-8 text-9xl opacity-5 pointer-events-none select-none">
+                🔱
+              </div>
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <span className="px-2.5 py-0.5 text-[9px] font-extrabold tracking-widest uppercase bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded-full">
+                    Perfil Mixto Detectado
+                  </span>
+                </div>
+                <div>
+                  <h3 className="text-2xl md:text-3xl font-bold text-white tracking-tight uppercase font-display">
+                    {mixedProfile.title || (mixedProfile as any).name}
+                  </h3>
+                  <p className="text-xs text-amber-500/80 font-bold uppercase tracking-wider mt-1 flex items-center gap-2">
+                    <span>{domProfile.symbol} {domProfile.id}</span>
+                    <span className="text-gray-600 font-normal">+</span>
+                    <span>{secProfile?.symbol} {secProfile?.id}</span>
+                  </p>
+                </div>
+                <p className="text-xs md:text-sm text-gray-300 leading-relaxed max-w-4xl font-light">
+                  {mixedProfile.text || (mixedProfile as any).description}
+                </p>
+
+                {/* Porcentajes: barra visual mostrando dominant% vs secondary% */}
+                <div className="pt-2 max-w-lg space-y-2">
+                  <div className="flex justify-between text-xs text-gray-400 font-mono">
+                    <span className="capitalize">{domProfile.symbol} {domProfile.id}: {result.totalScores[result.dominant]}%</span>
+                    <span className="capitalize">{secProfile?.symbol} {secProfile?.id}: {result.secondary ? result.totalScores[result.secondary] : 0}%</span>
+                  </div>
+                  <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden border border-white/5 flex">
+                    <div 
+                      style={{ width: `${result.totalScores[result.dominant]}%` }}
+                      className="h-full bg-amber-500 rounded-l-full"
+                    />
+                    <div 
+                      style={{ width: `${result.secondary ? result.totalScores[result.secondary] : 0}%` }}
+                      className="h-full bg-violet-400 rounded-r-full"
+                    />
+                  </div>
+                </div>
+
+                <p className="text-[10px] text-gray-500 italic mt-1">
+                  * Una diferencia de {Math.abs(result.totalScores[result.dominant] - (result.secondary ? result.totalScores[result.secondary] : 0)).toFixed(0)} puntos indica alta integración entre ambos elementos.
+                </p>
+              </div>
+            </motion.section>
+          )}
+
           {/* ANÁLISIS DE MÁSCARA ADAPTATIVA: COSTO BIOLÓGICO Y ESTRÉS */}
           <section className="bg-app-card border border-app-border rounded-2xl p-6 relative overflow-hidden">
             <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
@@ -394,6 +475,152 @@ export function ResultsScreen({ result, onRestart }: { result: TestResult, onRes
               </div>
             </section>
           )}
+
+          {/* MEJORA 1 — SECCIÓN "POR QUÉ SALIÓ TU RESULTADO" */}
+          {(() => {
+            const leaderPhysical = getDimensionLeader(result.moduleScores, ['m1', 'm2']);
+            const leaderEnergy = getDimensionLeader(result.moduleScores, ['m3']);
+            const leaderEmotional = getDimensionLeader(result.moduleScores, ['m4']);
+            const leaderRelational = getDimensionLeader(result.moduleScores, ['m5', 'm6']);
+
+            const physicalPhrases = {
+              colerico: "porque tus respuestas sobre estructura corporal, digestión reactiva y susceptibilidad térmica fueron consistentemente calientes y secas.",
+              flematico: "porque tus respuestas sobre fisionomía suave, propensión a retención hídrica y susceptibilidad al frío fueron consistentemente frías y húmedas.",
+              sanguineo: "porque tus respuestas sobre fisionomía muscularizada, transpiración ágil y susceptibilidad al calor húmedo fueron consistentemente el perfil de Aire.",
+              melancolico: "porque tus respuestas sobre fisionomía delgada, piel seca y susceptibilidad al frío seco correspondieron consistentemente al elemento Tierra."
+            };
+
+            const energyPhrases = {
+              colerico: "toma de acción rápida, orientación firme a resultados claros, dirección asertiva y liderazgo ejecutivo con alta resiliencia.",
+              flematico: "acción pausada que prioriza la concordia y busca sostener el bienestar de su entorno de forma gradual y estable.",
+              sanguineo: "energía dinámica y relacional de alta velocidad, activada prioritariamente bajo el estímulo de la conexión humana viva.",
+              melancolico: "conducción interna racional y reservada, con ciclos alternados de intensa concentración y foco profundo solitario."
+            };
+
+            const emotionalPhrases = {
+              colerico: "racionalización del dolor emocional, rechazo activo a mostrar vulnerabilidad y resolución pragmática de tensiones.",
+              flematico: "profundidad emocional sutil, sensibilidad empática resguardada y una gran lealtad vinculante pero de lenta exteriorización.",
+              sanguineo: "expresión emocional libre, expansiva y espontánea, caracterizada por una rápida capacidad de recuperación y ligereza.",
+              melancolico: "sentir duradero, íntimo y minucioso, propenso a la introspección analítica profunda y a la sintonía afectiva refinada."
+            };
+
+            const relationalPhrases = {
+              colerico: "búsqueda de respeto genuino y objetivos compartidos, con baja tolerancia a la ineficiencia o a los rodeos sentimentales.",
+              flematico: "entrega afectiva leal, fomento del acuerdo conciliador y una tendencia adaptativa a absorber tensiones del entorno.",
+              sanguineo: "búsqueda constante de libertad expansiva, chispas lúdicas creativas y nutrición de vínculos amplios.",
+              melancolico: "vínculos muy selectivos, exigencia implícita de sintonía intelectual fina y un anhelo de comprensión exclusiva."
+            };
+
+            const getLeftBorderColor = (b: Biotype) => {
+              switch (b) {
+                case 'colerico': return 'border-l-orange-500';
+                case 'flematico': return 'border-l-violet-400';
+                case 'sanguineo': return 'border-l-red-500';
+                case 'melancolico': return 'border-l-emerald-400';
+              }
+            };
+
+            const diffScore = result.secondary ? Math.abs(result.totalScores[result.dominant] - result.totalScores[result.secondary]) : 0;
+
+            const dimensionCards = [
+              {
+                id: 'physical',
+                title: 'Dimensión Física (Hardware)',
+                icon: <Fingerprint className="w-5 h-5 text-amber-500" />,
+                leader: leaderPhysical,
+                profile: BIOTYPES[leaderPhysical],
+                text: `Tu patrón físico apunta al biotipo ${BIOTYPES[leaderPhysical].id} ${physicalPhrases[leaderPhysical]}`
+              },
+              {
+                id: 'energy',
+                title: 'Dimensión Energética (Motor Interno)',
+                icon: <Zap className="w-5 h-5 text-amber-500" />,
+                leader: leaderEnergy,
+                profile: BIOTYPES[leaderEnergy],
+                text: `Tu motor interno y forma de actuar refleja el patrón ${BIOTYPES[leaderEnergy].id}: ${energyPhrases[leaderEnergy]}`
+              },
+              {
+                id: 'emotional',
+                title: 'Dimensión Emocional (Mundo Interior)',
+                icon: <Heart className="w-5 h-5 text-amber-500" />,
+                leader: leaderEmotional,
+                profile: BIOTYPES[leaderEmotional],
+                text: `Tu mundo emocional se alinea con ${BIOTYPES[leaderEmotional].id}: ${emotionalPhrases[leaderEmotional]}`
+              },
+              {
+                id: 'relational',
+                title: 'Dimensión Relacional y Adaptativa',
+                icon: <UserCheck className="w-5 h-5 text-amber-500" />,
+                leader: leaderRelational,
+                profile: BIOTYPES[leaderRelational],
+                text: `En vínculos y adaptación predomina ${BIOTYPES[leaderRelational].id}: ${relationalPhrases[leaderRelational]}`
+              }
+            ];
+
+            if (result.isMixed && result.secondary) {
+              dimensionCards.push({
+                id: 'mixed_why',
+                title: 'Simetría de Elementos (Perfil Mixto)',
+                icon: <Layers className="w-5 h-5 text-amber-400" />,
+                leader: result.secondary,
+                profile: BIOTYPES[result.secondary],
+                text: `Tu mezcla con ${result.secondary} aparece porque la diferencia entre ambos biotipos es de solo ${diffScore.toFixed(0)} puntos. Esto es frecuente y significa que tienes acceso natural a las fortalezas de ambos elementos.`
+              });
+            }
+
+            return (
+              <section className="space-y-6 pt-4 card-stagger-container">
+                <div>
+                  <h3 className="text-xl md:text-2xl font-bold uppercase font-display tracking-tight text-white flex items-center gap-2">
+                    <Compass className="w-6 h-6 text-amber-500" /> Por qué salió este resultado
+                  </h3>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Basado en tus respuestas reales por dimensión
+                  </p>
+                </div>
+
+                <motion.div 
+                  initial="hidden"
+                  animate="visible"
+                  variants={{
+                    visible: { transition: { staggerChildren: 0.1 } }
+                  }}
+                  className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                >
+                  {dimensionCards.map((card) => (
+                    <motion.div
+                      key={card.id}
+                      variants={{
+                        hidden: { opacity: 0, y: 15 },
+                        visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } }
+                      }}
+                      className={`bg-app-card border border-app-border border-l-4 ${getLeftBorderColor(card.leader)} rounded-2xl p-5 relative overflow-hidden shadow-md flex flex-col justify-between`}
+                    >
+                      <div className="absolute -right-3 -top-3 text-7xl opacity-[0.03] pointer-events-none select-none">
+                        {card.profile.symbol}
+                      </div>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                          <div className="flex items-center gap-2">
+                            {card.icon}
+                            <h4 className="text-xs font-bold uppercase tracking-wider text-gray-200">
+                              {card.title}
+                            </h4>
+                          </div>
+                          <span className="text-xs shrink-0 font-bold bg-white/5 px-2.5 py-0.5 rounded-full border border-white/5 text-amber-300">
+                            {card.profile.symbol} {card.leader}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-300 leading-relaxed font-light">
+                          {card.text}
+                        </p>
+                      </div>
+                    </motion.div>
+                  ))}
+                </motion.div>
+              </section>
+            );
+          })()}
 
           {/* PROTOCOLO INTERINTEGRADO */}
           <section className="space-y-6">

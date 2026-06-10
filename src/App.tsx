@@ -16,6 +16,15 @@ export default function App() {
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [result, setResult] = useState<TestResult | null>(null);
 
+  const [savedResult, setSavedResult] = useState<TestResult | null>(() => {
+    try {
+      const raw = localStorage.getItem('biotype_last_result');
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  });
+
   // Load saved session on mount
   useEffect(() => {
     try {
@@ -51,6 +60,9 @@ export default function App() {
   const clearSession = () => {
     localStorage.removeItem('biotype_answers');
     localStorage.removeItem('biotype_is_deep_mode');
+    localStorage.removeItem('biotype_last_result');
+    localStorage.removeItem('biotype_last_result_date');
+    setSavedResult(null);
     setAnswers([]);
     setResult(null);
     setIsDeepMode(false);
@@ -66,6 +78,9 @@ export default function App() {
   const handleProcessingComplete = () => {
     const finalResult = calculateResults(answers);
     setResult(finalResult);
+    localStorage.setItem('biotype_last_result', JSON.stringify(finalResult));
+    localStorage.setItem('biotype_last_result_date', new Date().toISOString());
+    setSavedResult(finalResult);
     setScreen('results');
   };
 
@@ -77,6 +92,11 @@ export default function App() {
             <WelcomeScreen 
               key="welcome"
               hasSavedProgress={answers.length > 0} 
+              savedResult={savedResult}
+              onViewSaved={() => {
+                setResult(savedResult);
+                setScreen('results');
+              }}
               onNext={() => {
                 if (answers.length > 0) {
                   // If they hit primary button but had saved progress, ask if they want to clear or continue.
