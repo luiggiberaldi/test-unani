@@ -126,27 +126,46 @@ export function calculateResults(answers: Answer[]): TestResult {
   const normalizedTotal: Record<Biotype, number> = { colerico: 0, flematico: 0, sanguineo: 0, melancolico: 0 };
   
   if (totalRawSum > 0) {
+    let sum = 0;
     biotypes.forEach(b => {
       normalizedTotal[b] = Math.round((totalScores[b] / totalRawSum) * 100);
+      sum += normalizedTotal[b];
     });
+    // Adjust rounding error so it sums up to exactly 100%
+    if (sum !== 100) {
+      const largest = biotypes.reduce((a, b) => totalScores[a] > totalScores[b] ? a : b);
+      normalizedTotal[largest] += (100 - sum);
+    }
   }
 
   // Normalize physical vector to percentage
   const physTotalSum = biotypes.reduce((acc, b) => acc + physicalSum[b], 0);
   const normalizedPhys: Record<Biotype, number> = { colerico: 25, flematico: 25, sanguineo: 25, melancolico: 25 };
   if (physTotalSum > 0) {
+    let sum = 0;
     biotypes.forEach(b => {
       normalizedPhys[b] = Math.round((physicalSum[b] / physTotalSum) * 100);
+      sum += normalizedPhys[b];
     });
+    if (sum !== 100) {
+      const largest = biotypes.reduce((a, b) => physicalSum[a] > physicalSum[b] ? a : b);
+      normalizedPhys[largest] += (100 - sum);
+    }
   }
 
   // Normalize behavioral vector to percentage
   const behavTotalSum = biotypes.reduce((acc, b) => acc + behavioralSum[b], 0);
   const normalizedBehav: Record<Biotype, number> = { colerico: 25, flematico: 25, sanguineo: 25, melancolico: 25 };
   if (behavTotalSum > 0) {
+    let sum = 0;
     biotypes.forEach(b => {
       normalizedBehav[b] = Math.round((behavioralSum[b] / behavTotalSum) * 100);
+      sum += normalizedBehav[b];
     });
+    if (sum !== 100) {
+      const largest = biotypes.reduce((a, b) => behavioralSum[a] > behavioralSum[b] ? a : b);
+      normalizedBehav[largest] += (100 - sum);
+    }
   }
 
   // Calculate consistency overlap percentage (0-100)
@@ -160,10 +179,15 @@ export function calculateResults(answers: Answer[]): TestResult {
   const physicalBiotype = [...biotypes].sort((a,b) => (normalizedPhys[b] - normalizedPhys[a]) || (totalScores[b] - totalScores[a]))[0];
   const behavioralBiotype = [...biotypes].sort((a,b) => (normalizedBehav[b] - normalizedBehav[a]) || (totalScores[b] - totalScores[a]))[0];
 
+  // Rank biotypes globally
+  const ranked = [...biotypes].sort((a, b) => normalizedTotal[b] - normalizedTotal[a]);
+  const dominant = ranked[0];
+  const secondary = ranked[1];
+
   const maskInfo = ADAPTATION_MASKS[physicalBiotype]?.[behavioralBiotype];
   const maskName = maskInfo?.name || "Máscara de Adaptación";
   const maskDescription = maskInfo?.desc || "Muestras un proceso de adaptación complejo con múltiples influencias en tu comportamiento en comparación con tus rasgos físicos.";
-  const isAligned = physicalBiotype === behavioralBiotype;
+  const isAligned = physicalBiotype === dominant;
 
   // Soft Normalization per module for the radar chart (1-100 range)
   const normalizedModuleScores: Record<string, Record<Biotype, number>> = {};
@@ -171,42 +195,61 @@ export function calculateResults(answers: Answer[]): TestResult {
     const modRawSum = biotypes.reduce((acc, b) => acc + moduleScores[modId][b], 0);
     normalizedModuleScores[modId] = { colerico: 0, flematico: 0, sanguineo: 0, melancolico: 0 };
     if (modRawSum > 0) {
+      let sum = 0;
       biotypes.forEach(b => {
         normalizedModuleScores[modId][b] = Math.round((moduleScores[modId][b] / modRawSum) * 100);
+        sum += normalizedModuleScores[modId][b];
       });
+      if (sum !== 100) {
+        const largest = biotypes.reduce((a, b) => moduleScores[modId][a] > moduleScores[modId][b] ? a : b);
+        normalizedModuleScores[modId][largest] += (100 - sum);
+      }
     }
   });
 
-  // Rank biotypes globally
-  const ranked = [...biotypes].sort((a, b) => normalizedTotal[b] - normalizedTotal[a]);
-  const dominant = ranked[0];
-  const secondary = ranked[1];
-  
   const diff = normalizedTotal[dominant] - normalizedTotal[secondary];
   const isMixed = diff < 15;
 
+  // Confidence index: Base 80%, subtracts for contradictions and flat/neutral profiles
   let confidence = 80;
-  if (normalizedTotal[dominant] > 50) confidence += 10;
-  else if (normalizedTotal[dominant] < 35) confidence -= 5;
-  
-  if (confidence > 98) confidence = 98;
-  if (confidence < 60) confidence = 60;
 
-  // Extract high diagnostic responses
-  const diagnosticQIds = ['m6_4', 'm6_5', 'm6_9', 'm6_10'];
+  // 1. Biological contradictions: Opposite elements both scoring high is confusing
+  // colerico (Fuego - Fire) vs flematico (Agua - Water)
+  const fireWaterOpposition = Math.min(normalizedTotal.colerico, normalizedTotal.flematico);
+  // sanguineo (Aire - Air) vs melancolico (Tierra - Earth)
+  const airEarthOpposition = Math.min(normalizedTotal.sanguineo, normalizedTotal.melancolico);
+  confidence -= Math.round((fireWaterOpposition + airEarthOpposition) * 0.4);
+
+  // 2. Flat profiles (neutrality or too many standard/even choices decreases confidence)
+  const scoresArray = Object.values(normalizedTotal);
+  const maxScore = Math.max(...scoresArray);
+  const minScore = Math.min(...scoresArray);
+  const range = maxScore - minScore;
+  if (range < 20) {
+    confidence -= 12; // High dispersion / flat (neutral response patterns)
+  } else if (range > 40) {
+    confidence += 10; // High polarity indicates very clear and certain profiles
+  }
+
+  // Adjust for dominant intensity
+  if (normalizedTotal[dominant] > 50) confidence += 5;
+  
+  // Clamp boundaries safely
+  confidence = Math.max(60, Math.min(98, confidence));
+
+  // Extract the 3 most determinant responses of module 6
+  const m6Answers = answers.filter(a => a.moduleId === 'm6');
   const keyResponses: { questionText: string, optionSelected: string, biotype: Biotype }[] = [];
-  diagnosticQIds.forEach(qId => {
-    const ans = answers.find(a => a.questionId === qId);
-    if (ans) {
-      const question = QUESTIONS.find(q => q.id === qId);
-      if (question && ans.selectedOptionIndices.length > 0) {
-        const option = question.options[ans.selectedOptionIndices[0]];
-        keyResponses.push({
-          questionText: question.text,
-          optionSelected: option.text,
-          biotype: option.biotype
-        });
-      }
+  
+  m6Answers.slice(0, 3).forEach(ans => {
+    const question = QUESTIONS.find(q => q.id === ans.questionId);
+    if (question && ans.selectedOptionIndices.length > 0) {
+      const option = question.options[ans.selectedOptionIndices[0]];
+      keyResponses.push({
+        questionText: question.text,
+        optionSelected: option.text,
+        biotype: option.biotype
+      });
     }
   });
 
