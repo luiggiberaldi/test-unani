@@ -105,20 +105,24 @@ export function QuestionWizard({ initialAnswers, isDeepMode, onComplete, onSave 
   };
 
   const microcopy = useMemo(() => {
-    if (isDeepMode) {
-      if (safeIndex === 17) return "¡Módulo físico completado! Pasamos a la energía corporizada.";
-      if (safeIndex === 30) return "Vas muy bien. Estás descubriendo tu dinámica con el entorno.";
-      if (safeIndex === 44) return "Excelente. Entramos al mundo de tus emociones profundas.";
-      if (safeIndex === 60) return "Casi terminas. Última etapa: máscaras y adaptación social.";
-    } else {
-      // Adjusted milestones for the 30-question version
-      if (safeIndex === 5) return "¡Módulo físico completado! Pasamos a la energía corporizada.";
-      if (safeIndex === 10) return "Vas muy bien. Estás descubriendo tu dinámica con el entorno.";
-      if (safeIndex === 15) return "Excelente. Entramos al mundo de tus emociones profundas.";
-      if (safeIndex === 25) return "Casi terminas. Última etapa: máscaras y adaptación social.";
+    const prevQuestion = currentIndex > 0 ? activeQuestions[currentIndex - 1] : null;
+    const currQuestion = activeQuestions[currentIndex];
+    
+    if (!prevQuestion || !currQuestion) return null;
+    
+    // Show microcopy only when transitioning between modules
+    if (prevQuestion.moduleId !== currQuestion.moduleId) {
+      const messages: Record<string, string> = {
+        'm2': '¡Módulo físico completado! Ahora exploramos tu relación con el entorno.',
+        'm3': 'Bien hecho. Pasamos a tu motor interno y cómo actúas.',
+        'm4': 'Excelente. Entramos al territorio de tus emociones profundas.',
+        'm5': 'Muy bien. Ahora exploramos cómo te vinculas con los demás.',
+        'm6': 'Casi terminas. Última etapa: tu máscara y tu adaptación real.',
+      };
+      return messages[currQuestion.moduleId] || null;
     }
     return null;
-  }, [safeIndex, isDeepMode]);
+  }, [currentIndex, activeQuestions]);
 
   return (
     <div className="max-w-3xl mx-auto w-full pt-4 md:pt-12 px-4 flex flex-col min-h-[80vh]">

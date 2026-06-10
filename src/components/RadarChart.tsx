@@ -104,8 +104,8 @@ export function RadarChart({ result, className }: RadarChartProps) {
             points={poly.points}
             fill={poly.color}
             stroke={poly.color}
-            strokeWidth={poly.biotype === result.dominant ? "2" : "1"}
-            fillOpacity={poly.biotype === result.dominant ? "0.4" : "0.1"}
+            strokeWidth={poly.biotype === result.dominant ? "2.5" : (poly.biotype === result.secondary ? "1" : "0.4")}
+            fillOpacity={poly.biotype === result.dominant ? "0.45" : (poly.biotype === result.secondary ? "0.15" : "0.05")}
             className="transition-all duration-700 ease-in-out"
             {...(poly.biotype === result.dominant ? { className: "radar-value transition-all duration-700 ease-in-out" } : {})}
           />

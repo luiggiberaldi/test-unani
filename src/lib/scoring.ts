@@ -235,7 +235,7 @@ export function calculateResults(answers: Answer[]): TestResult {
   if (normalizedTotal[dominant] > 50) confidence += 5;
   
   // Clamp boundaries safely
-  confidence = Math.max(60, Math.min(98, confidence));
+  confidence = Math.max(45, Math.min(98, confidence));
 
   // Extract the 3 most determinant responses of module 6
   const m6Answers = answers.filter(a => a.moduleId === 'm6');
@@ -255,7 +255,7 @@ export function calculateResults(answers: Answer[]): TestResult {
 
   return {
     dominant,
-    secondary: normalizedTotal[secondary] > 15 ? secondary : null,
+    secondary: normalizedTotal[secondary] > 20 ? secondary : null,
     moduleScores: normalizedModuleScores,
     totalScores: normalizedTotal,
     confidence,

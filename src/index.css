@@ -67,28 +67,55 @@
 
 @media print {
   body {
-    background-color: white !important;
-    color: black !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+    background: #ffffff !important;
+    color: #111111 !important;
   }
-  
-  /* Hide interactive elements when printing */
+
   .no-print {
     display: none !important;
   }
 
   .glass-card {
-    background-color: white !important;
-    border: 1px solid #e2e8f0 !important;
-    color: black !important;
+    background: #f9f9f9 !important;
+    border: 1px solid #e0e0e0 !important;
     box-shadow: none !important;
-    break-inside: avoid;
   }
-  
-  /* Reverse text colors for readability on white paper if they were light */
-  .text-slate-400 { color: #64748b !important; }
-  .text-slate-300 { color: #475569 !important; }
-  .text-amber-500 { color: #d97706 !important; }
-  .text-\[\#e5e7eb\] { color: #1e293b !important; }
+
+  nav, header, footer, button {
+    display: none !important;
+  }
+
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+  }
+
+  h1, h2, h3, h4, h5 {
+    color: #111111 !important;
+  }
+
+  p, span, li {
+    color: #333333 !important;
+  }
+
+  .gold-text {
+    color: #a07800 !important;
+  }
+
+  .gold-gradient {
+    background: #a07800 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  svg {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  @page {
+    margin: 1.5cm;
+    size: A4;
+  }
 }
